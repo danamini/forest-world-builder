@@ -5,15 +5,17 @@
 A procedurally generated wood that runs in the browser. Five Blender primitives, four verbs and a handful of
 field rules grow everything; nothing is placed by hand.
 
-**How it works, with live illustrations: [How the wood grows](docs/how-the-wood-grows.html).** GitHub shows that
-file as source, so open it from a checkout, or at `http://localhost:5199/docs/how-the-wood-grows.html` while the
-dev server runs.
+**Walk it: [forest.spectrumaura.org](https://forest.spectrumaura.org/).**
+How it works, with live illustrations: [How the wood grows](https://forest.spectrumaura.org/how-the-wood-grows.html)
+(source in `docs/how-the-wood-grows.html`).
 
 ## Run
 
     npm install
     npx vite --host --port 5199 --strictPort   # dev server, reachable on the local network
     npm run build                              # production build into dist/ (about 2.0 MB)
+
+Every push to `main` builds and publishes to GitHub Pages (`.github/workflows/pages.yml`).
     npm run assets                             # rebuild public/ from blender/build.py (Blender 5.2, ~40 s)
 
 ## Address parameters

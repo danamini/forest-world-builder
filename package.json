@@ -4,7 +4,7 @@
   "description": "",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cp docs/how-the-wood-grows.html dist/",
     "preview": "vite preview",
     "assets": "/Applications/Blender.app/Contents/MacOS/Blender -b -P blender/build.py"
   },
