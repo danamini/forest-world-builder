@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How the wood grows</title>
+<style>
+  :root { --paper: #f4f1e8; --ink: #23291f; --soft: #5d6654; --rule: #d6d1c0; --panel: #141a13; --panel-ink: #cfd6c4; --accent: #2f6b3a; --chip: #e7e2d2 }
+  @media (prefers-color-scheme: dark) { :root { --paper: #10140f; --ink: #dde3d2; --soft: #96a089; --rule: #2a3226; --panel: #0a0d09; --accent: #8fc48a; --chip: #1c231a } }
+  * { box-sizing: border-box }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 17px/1.6 Iowan Old Style, Palatino, Georgia, serif; -webkit-text-size-adjust: 100% }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px 96px }
+  h1 { font-size: clamp(34px, 8vw, 54px); line-height: 1.05; margin: 0 0 12px; letter-spacing: -.02em; text-wrap: balance }
+  h2 { font-size: 26px; line-height: 1.2; margin: 64px 0 8px; letter-spacing: -.01em }
+  h2 small { display: block; font: 600 11px/1 ui-monospace, Menlo, monospace; letter-spacing: .16em; color: var(--accent); margin-bottom: 10px }
+  p { margin: 12px 0 }
+  .lede { font-size: 20px; color: var(--soft) }
+  code, .mono { font: 13px/1.5 ui-monospace, Menlo, monospace }
+  code { background: var(--chip); padding: 1px 5px; border-radius: 3px }
+  figure { margin: 24px 0; background: var(--panel); border-radius: 10px; padding: 12px; color: var(--panel-ink) }
+  figure canvas, figure svg { display: block; width: 100%; height: auto; border-radius: 6px }
+  #map, #scatter, #tree { max-width: 480px; margin: 0 auto }
+  figcaption { font: 12px/1.5 ui-monospace, Menlo, monospace; color: #8d9783; padding: 10px 2px 0 }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 0 0 10px; font: 12px/1 ui-monospace, Menlo, monospace }
+  button, input[type=number] { font: inherit; color: var(--panel-ink); background: #222b20; border: 1px solid #364233; border-radius: 5px; padding: 7px 10px; cursor: pointer }
+  button[aria-pressed=true] { background: #3d6b3f; border-color: #6fa86c; color: #fff }
+  input[type=number] { width: 84px; cursor: text }
+  input[type=range] { flex: 1; min-width: 140px; accent-color: #7fb87a }
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px }
+  .trio div { text-align: center; font: 11px/1.4 ui-monospace, Menlo, monospace; color: #8d9783 }
+  .trio canvas { image-rendering: pixelated; margin-bottom: 6px }
+  .wide { overflow-x: auto }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; min-width: 520px }
+  th, td { text-align: left; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--rule); vertical-align: top }
+  th { font: 600 11px/1.4 ui-monospace, Menlo, monospace; letter-spacing: .1em; color: var(--soft) }
+  td.n { font: 13px/1.7 ui-monospace, Menlo, monospace; white-space: nowrap }
+  .key { display: flex; flex-wrap: wrap; gap: 4px 14px; padding-top: 10px; font: 12px/1.4 ui-monospace, Menlo, monospace; color: #8d9783 }
+  .key i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px }
+  svg text { font: 11px ui-monospace, Menlo, monospace; fill: #cfd6c4 }
+  svg .dim { fill: #8d9783 }
+  footer { margin-top: 72px; padding-top: 16px; border-top: 1px solid var(--rule); color: var(--soft); font-size: 14px }
+</style>
+
+<main>
+  <h1>How the wood grows</h1>
+  <p class="lede">The forest is not stored anywhere. It is worked out, afresh, from one number. This page shows the rules, and every picture on it is drawn live by the same arithmetic the forest uses.</p>
+
+  <figure>
+    <svg viewBox="0 0 720 150" role="img" aria-label="Seed to noise to fields to scatter to forms to light">
+      <g fill="#1d261b" stroke="#4d6148">
+        <rect x="4" y="50" width="92" height="50" rx="8"/><rect x="128" y="50" width="92" height="50" rx="8"/><rect x="252" y="50" width="92" height="50" rx="8"/>
+        <rect x="376" y="50" width="92" height="50" rx="8"/><rect x="500" y="50" width="92" height="50" rx="8"/><rect x="624" y="50" width="92" height="50" rx="8"/>
+      </g>
+      <g stroke="#7fb87a" stroke-width="1.5" fill="none"><path d="M98 75h28M222 75h28M346 75h28M470 75h28M594 75h28"/></g>
+      <g text-anchor="middle">
+        <text x="50" y="79">seed</text><text x="174" y="79">noise</text><text x="298" y="79">fields</text><text x="422" y="79">scatter</text><text x="546" y="79">forms</text><text x="670" y="79">light</text>
+        <text class="dim" x="50" y="122">one integer</text><text class="dim" x="174" y="122">smooth chance</text><text class="dim" x="298" y="122">the ecology</text>
+        <text class="dim" x="422" y="122">who lives where</text><text class="dim" x="546" y="122">what it looks like</text><text class="dim" x="670" y="122">sun, air, lens</text>
+        <text class="dim" x="50" y="36">1</text><text class="dim" x="174" y="36">1</text><text class="dim" x="298" y="36">2</text><text class="dim" x="422" y="36">3–4</text><text class="dim" x="546" y="36">5–6</text><text class="dim" x="670" y="36">8</text>
+      </g>
+    </svg>
+    <figcaption>The whole pipeline. Numbers are the sections below.</figcaption>
+  </figure>
+
+  <h2><small>1 · SEED</small>A seed is a place</h2>
+  <p>Everything starts from a function called <code>hash(x, z, k)</code>. Give it two whole numbers and a channel, and it scrambles them with the seed into a fraction between 0 and 1. The same inputs always give the same answer, so nothing has to be remembered: ask about a spot twice, a year apart, and the wood says the same thing.</p>
+  <p>Change the seed here and every figure on the page redraws as a different wood.</p>
+  <figure>
+    <div class="row"><label for="seed">SEED</label><input id="seed" type="number" value="1" min="0" max="99999"><button id="reseed">ANOTHER WOOD</button></div>
+    <div class="trio">
+      <div><canvas id="n1" width="96" height="96"></canvas>hash<br>one value per cell</div>
+      <div><canvas id="n2" width="96" height="96"></canvas>noise<br>blended between cells</div>
+      <div><canvas id="n3" width="96" height="96"></canvas>fbm<br>four scales stacked</div>
+    </div>
+    <figcaption>Left: raw chance, one number per grid cell. Middle: the same numbers eased into each other, which gives smooth hills of probability. Right: that picture added to itself at double, quadruple and eight times the detail. This last one is the workhorse.</figcaption>
+  </figure>
+
+  <h2><small>2 · FIELDS</small>Four maps are the whole ecology</h2>
+  <p>The wood has no hand-placed anything. It has four fields, each a formula over noise, plus the height of the ground. Every plant and animal reads these and nothing else.</p>
+  <figure>
+    <div class="row" id="mapmode">
+      <button data-m="all" aria-pressed="true">ALL</button><button data-m="glade">GLADE</button><button data-m="wet">WET</button><button data-m="gap">CANOPY GAPS</button><button data-m="height">HEIGHT</button>
+    </div>
+    <canvas id="map" width="360" height="360"></canvas>
+    <figcaption>A square 500 m on a side, seen from above, north up. The pale line is the footpath. <span id="mapnote"></span></figcaption>
+  </figure>
+  <div class="wide"><table>
+    <tr><th>FIELD</th><th>WHAT IT IS</th><th>WHAT IT DOES</th></tr>
+    <tr><td>path</td><td>Distance from a wandering line</td><td>Keeps trunks off the trail, wears the ground bare</td></tr>
+    <tr><td>glade</td><td>The top slice of a broad fbm</td><td>Removes trees, brings grass, flowers and butterflies, burns off mist</td></tr>
+    <tr><td>wet</td><td>A slower, wider fbm</td><td>Chooses spruce over beech, ferns over nettles, moss on rocks, mushrooms</td></tr>
+    <tr><td>gap</td><td>Fine noise, hard-edged</td><td>Thins the canopy in patches so sunlight reaches the floor</td></tr>
+    <tr><td>height</td><td>Big hills plus small bumps, dipped along the path</td><td>The ground everything stands on</td></tr>
+  </table></div>
+
+  <h2><small>3 · SCATTER</small>One question per square</h2>
+  <p>To place trees, the ground is ruled into 5 m squares. For each square the wood asks its rule one question: <em>does something grow here, and what?</em> The rule rolls its hash dice against the fields at that spot. A yes gets a position jittered inside the square, a species and a size.</p>
+  <p>Because the dice are the hash of the square's own coordinates, the answer never changes. The wood only ever works out the squares near you, and when you walk back, the same trees are standing there.</p>
+  <figure>
+    <div class="row"><span>WALK NORTH</span><input id="walk" type="range" min="0" max="600" value="0"></div>
+    <canvas id="scatter" width="360" height="360"></canvas>
+    <div class="key" id="key"></div>
+    <figcaption>90 m across. Each dot is a tree, sized by its trunk; empty squares answered no. Drag the slider: you move, the trees do not.</figcaption>
+  </figure>
+
+  <h2><small>4 · LAYERS</small>Fourteen rules, one mechanism</h2>
+  <p>Trees are one layer. Every other living thing is another layer on the same mechanism, differing only in the size of its squares, how far out it is drawn, and its rule.</p>
+  <div class="wide"><table>
+    <tr><th>LAYER</th><th>SQUARE</th><th>REACH</th><th>RULE, IN WORDS</th></tr>
+    <tr><td>Trees</td><td class="n">5 m</td><td class="n">175 m</td><td>Not on the path, rare in glades, thinner in canopy gaps. Damp ground leans to spruce, dry to beech and oak</td></tr>
+    <tr><td>Understory</td><td class="n">4.3 m</td><td class="n">115 m</td><td>Bushes, young firs, bramble; firs where it is wet</td></tr>
+    <tr><td>Herbs</td><td class="n">1.4 m</td><td class="n">58 m</td><td>Ferns and bracken crowd the damp; nettles and ground cover elsewhere</td></tr>
+    <tr><td>Grass</td><td class="n">0.8 m</td><td class="n">38 m</td><td>Sparse sedge under trees, thick lawn and seeding grass in glades</td></tr>
+    <tr><td>Flowers</td><td class="n">1.1 m</td><td class="n">30 m</td><td>Grow in drifts; each drift is mostly one colour</td></tr>
+    <tr><td>Rocks</td><td class="n">6 m</td><td class="n">80 m</td><td>Mostly small, occasionally large; moss cushions where wet</td></tr>
+    <tr><td>Fallen logs</td><td class="n">13 m</td><td class="n">80 m</td><td>Away from the path</td></tr>
+    <tr><td>Fallen branches</td><td class="n">7 m</td><td class="n">50 m</td><td>Under trees, not in glades</td></tr>
+    <tr><td>Mushrooms</td><td class="n">2.5 m</td><td class="n">28 m</td><td>Only where it is damp</td></tr>
+    <tr><td>Leaf litter</td><td class="n">1.1 m</td><td class="n">24 m</td><td>Under trees</td></tr>
+    <tr><td>Butterflies</td><td class="n">6 m</td><td class="n">36 m</td><td>Mostly in glades; gone at night</td></tr>
+    <tr><td>Dragonflies</td><td class="n">7 m</td><td class="n">40 m</td><td>Hawk over damp ground; gone at night</td></tr>
+    <tr><td>Moths</td><td class="n">5 m</td><td class="n">30 m</td><td>Everywhere, but only after dark</td></tr>
+    <tr><td>Falling leaves</td><td class="n">5 m</td><td class="n">30 m</td><td>Under trees, forever falling</td></tr>
+  </table></div>
+  <figure>
+    <svg viewBox="0 0 720 230" role="img" aria-label="Reach and refill around the walker">
+      <circle cx="200" cy="115" r="100" fill="#1b2a1a" stroke="#4d6148"/><circle cx="200" cy="115" r="80" fill="#24402a" stroke="none"/>
+      <circle cx="200" cy="115" r="5" fill="#f3e9c6"/><text x="212" y="119">you</text>
+      <path d="M200 115 L271 44" stroke="#7fb87a" stroke-dasharray="3 3"/><text x="150" y="80">full size</text><text class="dim" x="263" y="182">shrinking</text>
+      <g fill="#7fb87a"><circle cx="150" cy="150" r="5"/><circle cx="245" cy="140" r="5"/><circle cx="170" cy="60" r="5"/><circle cx="280" cy="150" r="2.5"/><circle cx="120" cy="60" r="1.5"/></g>
+      <text x="340" y="60">Each layer is only drawn out to its reach.</text>
+      <text class="dim" x="340" y="84">In the outer fifth, a plant shrinks into the</text><text class="dim" x="340" y="100">ground as you leave it and rises as you come</text><text class="dim" x="340" y="116">back, so nothing pops into view.</text>
+      <text x="340" y="150">Layers are re-scattered one per frame,</text>
+      <text class="dim" x="340" y="174">trees every 10 m walked, grass every 2 m,</text><text class="dim" x="340" y="190">so no single frame carries all the work.</text>
+    </svg>
+    <figcaption>How an endless wood stays cheap: a small disc of it exists at any moment.</figcaption>
+  </figure>
+
+  <h2><small>5 · PRIMITIVES</small>Five shapes, four verbs</h2>
+  <p>Blender supplies five plain meshes and nothing else that has a shape. In the browser, four operations bend them into every form in the wood.</p>
+  <figure>
+    <svg viewBox="0 0 720 300" role="img" aria-label="Five primitives and four verbs">
+      <g fill="none" stroke="#9fb695" stroke-width="1.2">
+        <path d="M40 40v90M100 40v90"/><ellipse cx="70" cy="40" rx="30" ry="8"/><path d="M40 130a30 8 0 0 0 60 0M40 70a30 8 0 0 0 60 0M40 100a30 8 0 0 0 60 0M55 47v90M85 47v90M70 48v90"/>
+        <path d="M184 40v90M196 40v90M184 62h12M184 85h12M184 108h12M190 40v90"/><ellipse cx="190" cy="40" rx="6" ry="2"/>
+        <rect x="262" y="45" width="76" height="80"/><path d="M300 45v80M262 85h76"/>
+        <path d="M418 130V40M442 130V40M418 130h24M418 112h24M418 94h24M418 76h24M418 58h24M418 40h24"/>
+        <circle cx="550" cy="85" r="42"/><ellipse cx="550" cy="85" rx="42" ry="14"/><ellipse cx="550" cy="85" rx="14" ry="42"/><ellipse cx="550" cy="85" rx="42" ry="30"/><ellipse cx="550" cy="85" rx="30" ry="42"/>
+      </g>
+      <g text-anchor="middle"><text x="70" y="160">tube</text><text x="190" y="160">twig</text><text x="300" y="160">card</text><text x="430" y="160">blade</text><text x="550" y="160">blob</text>
+        <text class="dim" x="70" y="176">trunks</text><text class="dim" x="190" y="176">limbs, stalks</text><text class="dim" x="300" y="176">leaf sprays, wings</text><text class="dim" x="430" y="176">grass, fronds</text><text class="dim" x="550" y="176">rocks, caps</text></g>
+      <path d="M20 200h680" stroke="#364233"/>
+      <g><text x="20" y="232">sweep</text><text class="dim" x="20" y="250">thread a tube along a</text><text class="dim" x="20" y="266">curve, radius varying</text>
+        <text x="200" y="232">lump</text><text class="dim" x="200" y="250">swell a blob with noise,</text><text class="dim" x="200" y="266">slice it with planes</text>
+        <text x="380" y="232">card</text><text class="dim" x="380" y="250">place a strip, droop and</text><text class="dim" x="380" y="266">cup it, pick a sprig image</text>
+        <text x="560" y="232">paint</text><text class="dim" x="560" y="250">colour each corner: tint,</text><text class="dim" x="560" y="266">moss, inner shade</text></g>
+    </svg>
+    <figcaption>A mushroom is a swept twig with a lumped blob on top. A rock is a lumped blob. A butterfly is a card and a blob.</figcaption>
+  </figure>
+
+  <h2><small>6 · GROWTH</small>One recursion grows every woody thing</h2>
+  <p>A trunk is swept upward. Along it, children branch off at a pitch, each a shorter, thinner copy of the same act, and so on down. Where the recursion stops, leaf cards are hung. There is one function for this, and a species is only a row of numbers handed to it.</p>
+  <p>Every individual also jitters its own spread, crown height and leaf size, so no two trees share a shape. The wood keeps four individuals of each species and scatters those.</p>
+  <figure>
+    <div class="row" id="species"></div>
+    <canvas id="tree" width="360" height="400"></canvas>
+    <figcaption id="treenote"></figcaption>
+  </figure>
+  <p>The leaves themselves are the one thing that is modelled, not computed: Blender builds four small sprigs (broadleaf, conifer, fern, leaf cluster), photographs them into a single image with a matching relief map, and each card shows one of the four.</p>
+
+  <h2><small>7 · SURFACES</small>What Blender bakes</h2>
+  <p>One script, run once, writes every asset. Besides the five primitives and the sprig image it makes three tiling surfaces. Bark and rock are noise shaped in frequency space, which wraps perfectly at the edges. The forest floor is a real bed of several thousand modelled leaves, needles and twigs, rendered from above.</p>
+  <div class="wide"><table>
+    <tr><th>ASSET</th><th>HOW IT IS MADE</th><th>SIZE</th></tr>
+    <tr><td>Primitives</td><td>Five meshes built in code</td><td class="n">20 KB</td></tr>
+    <tr><td>Sprig atlas</td><td>Four modelled sprigs, rendered with colour and relief</td><td class="n">408 KB</td></tr>
+    <tr><td>Bark, rock</td><td>Shaped noise, with relief</td><td class="n">762 KB</td></tr>
+    <tr><td>Ground</td><td>Rendered litter bed, with relief</td><td class="n">299 KB</td></tr>
+  </table></div>
+
+  <h2><small>8 · LIGHT</small>Sun, air and lens</h2>
+  <p>A clock drives everything about light. The sun rises at six and sets at eighteen; the moon rides exactly opposite it. From the sun's height the clock sets the light's colour and strength, the sky, the mist and the exposure. Showers drift through on their own slow noise, closing the cloud and dimming the sun.</p>
+  <figure>
+    <canvas id="day" width="360" height="150"></canvas>
+    <figcaption>One day, midnight to midnight. The band is the colour of the air; the curves are the height of the sun (warm) and moon (pale); the bottom strip is how much mist gathers.</figcaption>
+  </figure>
+  <p>Each frame is then finished in five steps.</p>
+  <figure>
+    <svg viewBox="0 0 720 190" role="img" aria-label="Post-processing chain">
+      <g fill="#1d261b" stroke="#4d6148"><rect x="4" y="20" width="128" height="56" rx="8"/><rect x="150" y="20" width="128" height="56" rx="8"/><rect x="296" y="20" width="128" height="56" rx="8"/><rect x="442" y="20" width="128" height="56" rx="8"/><rect x="588" y="20" width="128" height="56" rx="8"/></g>
+      <g stroke="#7fb87a" stroke-width="1.5"><path d="M133 48h16M279 48h16M425 48h16M571 48h16"/></g>
+      <g text-anchor="middle"><text x="68" y="52">scene</text><text x="214" y="52">air</text><text x="360" y="52">bloom</text><text x="506" y="52">tone map</text><text x="652" y="52">lens</text>
+        <text class="dim" x="68" y="100">the wood, with</text><text class="dim" x="68" y="116">sun shadows</text>
+        <text class="dim" x="214" y="100">30 steps along each</text><text class="dim" x="214" y="116">sight line, asking the</text><text class="dim" x="214" y="132">shadow map: lit or</text><text class="dim" x="214" y="148">not? Lit mist glows</text><text class="dim" x="214" y="164">as shafts</text>
+        <text class="dim" x="360" y="100">bright things</text><text class="dim" x="360" y="116">spill light</text>
+        <text class="dim" x="506" y="100">squeezes real</text><text class="dim" x="506" y="116">brightness onto</text><text class="dim" x="506" y="132">a screen</text>
+        <text class="dim" x="652" y="100">colour fringing,</text><text class="dim" x="652" y="116">grade, vignette,</text><text class="dim" x="652" y="132">film grain</text></g>
+    </svg>
+    <figcaption>Mist and light shafts are the same step: fog that knows where the shadows are.</figcaption>
+  </figure>
+  <p>Wind, wingbeats and the glow of sun through a leaf are small additions to the surface shaders, shared by every plant.</p>
+
+  <footer>The wood is about 670 lines of JavaScript on top of three.js, plus one Blender script. The page it loads is about 2.2 MB. This document carries its own copy of the noise, field, scatter and growth rules, so it stands alone.</footer>
+</main>
+
+<script>
+// ---- the same arithmetic as the wood (src/noise.js, src/world.js, src/forms.js), copied so this page stands alone
+let SEED = 1
+const hash = (x, z, k = 0) => { let h = Math.imul(x, 374761393) ^ Math.imul(z, 668265263) ^ Math.imul(k + SEED * 7919, 2246822519); h = Math.imul(h ^ h >>> 13, 1274126177); return ((h ^ h >>> 16) >>> 0) / 4294967296 }
+const noise = (x, z, k = 0) => { const ix = Math.floor(x), iz = Math.floor(z); let fx = x - ix, fz = z - iz; fx *= fx * (3 - 2 * fx); fz *= fz * (3 - 2 * fz)
+  const a = hash(ix, iz, k), b = hash(ix + 1, iz, k), c = hash(ix, iz + 1, k), d = hash(ix + 1, iz + 1, k); return a + (b - a) * fx + (c - a) * fz + (a - b - c + d) * fx * fz }
+const fbm = (x, z, o = 4, k = 0) => { let s = 0, a = .5, n = 0; for (let i = 0; i < o; i++, x *= 2.03, z *= 2.03, a *= .5) s += a * noise(x, z, k + i * 13), n += a; return s / n }
+const sat = x => Math.min(1, Math.max(0, x)), lerp = (a, b, t) => a + (b - a) * t
+const mulberry = s => () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 }
+const trail = z => 45 * (noise(z * .011, 3.3, 5) - .5) + 12 * (noise(z * .035, 8.1, 6) - .5)
+const fields = (x, z) => ({ path: Math.abs(x - trail(z)), glade: sat((fbm(x * .012, z * .012, 3, 1) - .54) * 9), wet: fbm(x * .008, z * .008, 3, 2), gap: sat(noise(x * .045, z * .045, 7) * 4 - 1.3) })
+const height = (x, z) => 16 * fbm(x * .006, z * .006, 4, 3) + 1.5 * fbm(x * .04, z * .04, 2, 4) - .2 * Math.exp(-(((x - trail(z)) / 3) ** 2))
+
+const $ = id => document.getElementById(id)
+const pen = (c, w, h) => { const r = Math.min(devicePixelRatio || 1, 2); c.width = w * r; c.height = h * r; const g = c.getContext('2d'); g.scale(r, r); return g }
+const pixels = (c, f) => { const g = c.getContext('2d'), W = c.width, H = c.height, im = g.createImageData(W, H), d = im.data
+  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i += 4) { const v = f(x, y); d[i] = v[0]; d[i + 1] = v[1]; d[i + 2] = v[2]; d[i + 3] = 255 }
+  g.putImageData(im, 0, 0) }
+
+// ---- 1. noise
+function drawNoise() {
+  const grey = v => [40 + v * 200, 50 + v * 195, 36 + v * 180]
+  pixels($('n1'), (x, y) => grey(hash(x >> 4, y >> 4, 3)))
+  pixels($('n2'), (x, y) => grey(noise(x / 16, y / 16, 3)))
+  pixels($('n3'), (x, y) => grey(fbm(x / 32, y / 32, 4, 3)))
+}
+
+// ---- 2. the field map
+let mode = 'all'
+function drawMap() {
+  const S = 500 / 360
+  pixels($('map'), (px, py) => {
+    const x = (px - 180) * S, z = (py - 180) * S, e = fields(x, z)
+    if (mode == 'glade') return [20 + e.glade * 200, 30 + e.glade * 210, 20 + e.glade * 90]
+    if (mode == 'wet') { const w = sat(e.wet * 4 - 1.5); return [24, 34 + w * 120, 30 + w * 200] }
+    if (mode == 'gap') { const g = 1 - e.gap; return [26 + g * 220, 40 + g * 190, 22 + g * 90] }
+    const shade = .75 + 9 * (height(x - 2, z - 2) - height(x + 2, z + 2)) / 16
+    if (mode == 'height') { const h = height(x, z) / 16; return [h * 230 * shade, h * 225 * shade, h * 190 * shade] }
+    let c = [28, 62, 30]                                                             // closed forest
+    c = c.map((v, i) => lerp(v, [22, 70, 74][i], sat(e.wet * 6 - 2.6) * .8))        // damp hollows
+    c = c.map((v, i) => lerp(v, [70, 104, 44][i], (1 - e.gap) * .45))               // sun reaches the floor
+    c = c.map((v, i) => lerp(v, [176, 196, 96][i], e.glade))                        // clearings
+    c = c.map((v, i) => lerp(v, [226, 212, 176][i], sat(1.6 - e.path / 2.2)))       // the path
+    return c.map(v => v * shade)
+  })
+  $('mapnote').textContent = { all: 'Bright patches are glades, blue-green is damp ground, lighter flecks are gaps in the canopy.', glade: 'Glade: 0 under trees, 1 in a clearing.',
+    wet: 'Wet: brighter is damper.', gap: 'Bright where the canopy opens and sun reaches the floor.', height: 'Height, lit from the north-west. The range is about 16 m.' }[mode]
+}
+
+// ---- 3. scatter: the real tree rule, layer 0, 5 m squares
+const KINDS = [['spruce', '#3f7d6a'], ['beech', '#9ccf5c'], ['birch', '#e8e3c4'], ['snag', '#8a7a6a'], ['pine', '#5fa07a'], ['oak', '#c9a24a']]
+function treeAt(ix, iz) {
+  let k = 0
+  const r = () => hash(ix, iz, k++), x = (ix + r()) * 5, z = (iz + r()) * 5, e = fields(x, z)
+  if (e.path < 2.4 || r() > .8 * (1 - .95 * e.glade) * (.25 + .75 * e.gap)) return { x, z }
+  const q = r(), damp = e.wet + (r() - .5) * .2 > .5
+  const kind = q < .04 ? 3 : damp ? (q < .6 ? 0 : q < .8 ? 4 : 2) : q < .45 ? 1 : q < .7 ? 5 : q < .85 ? 2 : 4
+  r(); return { x, z, kind, s: .7 + r() * .6 }
+}
+function drawScatter() {
+  const W = 360, g = pen($('scatter'), W, W), span = 90, k = W / span, cz = -$('walk').value, cx = trail(cz)
+  const X = x => (x - cx + span / 2) * k, Z = z => (z - cz + span / 2) * k
+  g.fillStyle = '#16210f'; g.fillRect(0, 0, W, W)
+  for (let py = 0; py < W; py += 6) for (let px = 0; px < W; px += 6) { const e = fields(cx + (px + 3) / k - span / 2, cz + (py + 3) / k - span / 2)
+    g.fillStyle = `rgba(190,205,110,${e.glade * .35})`; g.fillRect(px, py, 6, 6); g.fillStyle = `rgba(40,110,140,${sat(e.wet * 6 - 2.6) * .25})`; g.fillRect(px, py, 6, 6) }
+  g.strokeStyle = '#ffffff12'; g.lineWidth = 1; g.beginPath()
+  for (let i = Math.floor((cx - span / 2) / 5); i * 5 < cx + span / 2; i++) { g.moveTo(X(i * 5), 0); g.lineTo(X(i * 5), W) }
+  for (let i = Math.floor((cz - span / 2) / 5); i * 5 < cz + span / 2; i++) { g.moveTo(0, Z(i * 5)); g.lineTo(W, Z(i * 5)) }
+  g.stroke()
+  g.strokeStyle = '#e2d4b0'; g.lineWidth = 2.4 * k / 2; g.lineCap = 'round'; g.beginPath()
+  for (let z = cz - span / 2; z <= cz + span / 2; z += 1) g.lineTo(X(trail(z)), Z(z))
+  g.stroke()
+  for (let ix = Math.floor((cx - span / 2) / 5) - 1; ix * 5 < cx + span / 2; ix++) for (let iz = Math.floor((cz - span / 2) / 5) - 1; iz * 5 < cz + span / 2; iz++) {
+    const t = treeAt(ix, iz)
+    if (t.kind == null) continue
+    g.fillStyle = KINDS[t.kind][1]; g.beginPath(); g.arc(X(t.x), Z(t.z), 2 + t.s * 3.2, 0, 7); g.fill()
+  }
+  g.fillStyle = '#f3e9c6'; g.beginPath(); g.arc(W / 2, W / 2, 4, 0, 7); g.fill(); g.strokeStyle = '#0008'; g.lineWidth = 1; g.stroke()
+}
+$('key').innerHTML = KINDS.map(k => `<span><i style="background:${k[1]}"></i>${k[0]}</span>`).join('') + '<span><i style="background:#f3e9c6"></i>you</span>'
+
+// ---- 5. growth: the same recursion as tree() in src/forms.js, drawn side-on instead of built in 3D
+const SP = {
+  spruce: { h: 27, girth: .013, taper: .9, crown: .3, n: [34], pitch: [1.8], spread: .2, shape: f => 1.05 - f, lift: [0, .14], wander: .03, lean: .06, leafAt: 1, cards: 5, flat: 1, size: 2.1, leaf: [.8, .8, .5], bark: [.62, .46, .38] },
+  beech: { h: 22, girth: .017, taper: .7, crown: .34, n: [9, 3, 2], pitch: [.95, .8, .7], spread: .34, shape: f => .65 + .35 * Math.sin(f * 3.1), reach: .62, lift: [0, .3, .2, .1], wander: .12, lean: .15, leafAt: 2, cards: 3, size: 2.7, leaf: [.6, .72, .42], bark: [.72, .72, .66] },
+  birch: { h: 18, girth: .009, taper: .8, crown: .4, n: [15, 3], pitch: [.75, .9], spread: .2, shape: f => .6 + .4 * Math.sin(f * 3.1), reach: .6, lift: [0, .12, -.5], wander: .1, lean: .25, leafAt: 1, cards: 4, size: 1.5, leaf: [.8, .85, .32], bark: [1.5, 1.46, 1.38] },
+  pine: { h: 30, girth: .012, taper: .6, crown: .58, n: [16, 3], pitch: [1.35, .7], spread: .2, shape: f => .5 + .5 * Math.sin(f * 3.1), reach: .5, lift: [0, .1, .15], wander: .08, lean: .12, leafAt: 1, cards: 4, flat: 1, size: 2.2, leaf: [.75, .85, .5], bark: [.85, .52, .38] },
+  oak: { h: 17, girth: .028, taper: .6, crown: .25, n: [7, 4, 2], pitch: [1.15, .85, .7], spread: .55, shape: f => .7 + .3 * Math.sin(f * 3.1), reach: .6, lift: [0, .15, .2, .1], wander: .2, lean: .2, leafAt: 2, cards: 3, size: 2.6, leaf: [.5, .62, .3], bark: [.5, .46, .4] },
+  snag: { h: 14, girth: .02, taper: .5, crown: .4, n: [7, 2], pitch: [1.1, .8], spread: .2, shape: () => 1, reach: .5, lift: [0, -.1, -.2], wander: .1, lean: .3, leafAt: 9, cards: 0, bark: [.8, .78, .74] },
+  bush: { h: 2.4, girth: .012, taper: 1, crown: .12, n: [8, 2], pitch: [.8, .7], spread: .5, shape: () => 1, reach: .6, lift: [0, .2, .1], wander: .2, lean: .5, leafAt: 1, cards: 3, size: .9, leaf: [.6, .75, .38], bark: [.5, .42, .36] },
+  fir: { h: 6, girth: .016, taper: 1, crown: .1, n: [26], pitch: [1.7], spread: .28, shape: f => 1.05 - f, lift: [0, .1], wander: .03, lean: .05, leafAt: 1, cards: 4, flat: 1, size: 1.1, leaf: [.7, .9, .55], bark: [.5, .4, .33] },
+  bramble: { h: 1.3, girth: .012, taper: 1, crown: .1, n: [9, 3], pitch: [1.2, .8], spread: 1.1, shape: () => 1, reach: .6, lift: [0, -.3, -.2], wander: .3, lean: .6, leafAt: 1, cards: 4, size: .7, leaf: [.45, .6, .3], bark: [.35, .3, .22] },
+}
+const add = (a, b, s = 1) => [a[0] + b[0] * s, a[1] + b[1] * s, a[2] + b[2] * s], dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2], unit = a => { const l = Math.hypot(...a) || 1; return a.map(v => v / l) }
+function growTree(base, rnd) {
+  const sp = { ...base, spread: base.spread * (.75 + .5 * rnd()), crown: Math.min(.8, base.crown * (.7 + .6 * rnd())), size: base.size * (.85 + .3 * rnd()) }
+  const limbs = [], leaves = [], H = sp.h * (.75 + rnd() * .5), R = H * sp.girth
+  const grow = (from, dir, len, r, lvl) => {
+    const bend = add([(rnd() - .5) * len * sp.wander, 0, (rnd() - .5) * len * sp.wander], [0, 1, 0], len * (sp.lift[lvl] || 0))
+    const path = t => add(add(from, dir, len * t), bend, t * t)
+    const rad = lvl ? t => r * (1 - .85 * t) + .004 : t => r * ((1 - t) ** sp.taper + .04)
+    limbs.push({ path, rad, lvl })
+    for (let i = 0, n = sp.n[lvl] || 0; i < n; i++) {
+      const f = (i + rnd()) / n, t = lvl ? .25 + .75 * f : sp.crown + (1 - sp.crown) * f * .97, az = i * 2.4 + rnd()
+      let side = [Math.cos(az), 0, Math.sin(az)]
+      side = unit(add(side, dir, -dot(side, dir)))
+      const pitch = sp.pitch[lvl] * (.8 + .4 * rnd()), d = add(dir.map(v => v * Math.cos(pitch)), side, Math.sin(pitch))
+      grow(path(t), d, (lvl ? len * sp.reach : H * sp.spread * sp.shape(f)) * (.7 + .6 * rnd()), Math.max(rad(t) * .45, .01), lvl + 1)
+    }
+    if (lvl >= sp.leafAt) for (let j = 0; j < sp.cards; j++) leaves.push({ p: path(.25 + .75 * (j + rnd()) / sp.cards), s: sp.size * (.7 + .6 * rnd()), k: .8 + .4 * rnd() })
+  }
+  grow([0, 0, 0], unit([(rnd() - .5) * sp.lean, 1, (rnd() - .5) * sp.lean]), H, R, 0)
+  return { sp, limbs, leaves, H }
+}
+let kind = 'beech', treeSeed = 1
+function drawTree() {
+  const W = 360, HH = 400, g = pen($('tree'), W, HH), t = growTree(SP[kind], mulberry(SEED * 977 + treeSeed)), sp = t.sp
+  let top = t.H, wide = 1
+  for (const l of t.limbs) for (const u of [.5, 1]) { const p = l.path(u); top = Math.max(top, p[1] + 1); wide = Math.max(wide, Math.abs(p[0]) + 1) }
+  const k = Math.min((HH - 50) / top, (W - 40) / (wide * 2)), X = p => W / 2 + p[0] * k, Y = p => HH - 26 - p[1] * k
+  const sky = g.createLinearGradient(0, 0, 0, HH); sky.addColorStop(0, '#1c2a22'); sky.addColorStop(1, '#10160f'); g.fillStyle = sky; g.fillRect(0, 0, W, HH)
+  g.fillStyle = '#26301c'; g.fillRect(0, HH - 26, W, 26)
+  const col = (c, base, m = 1) => `rgb(${c.map((v, i) => Math.min(255, v * base[i] * m) | 0)})`
+  g.lineCap = 'round'
+  for (const l of [...t.limbs].sort((a, b) => a.lvl - b.lvl)) for (let i = 0; i < 8; i++) { const a = l.path(i / 8), b = l.path((i + 1) / 8)
+    g.strokeStyle = col(sp.bark, [150, 125, 105], .8 + .25 * (a[2] > 0)); g.lineWidth = Math.max(.6, l.rad(i / 8) * 2 * k); g.beginPath(); g.moveTo(X(a), Y(a)); g.lineTo(X(b), Y(b)); g.stroke() }
+  for (const f of t.leaves.sort((a, b) => a.p[2] - b.p[2])) { const z = .6 + .4 * sat(.5 + f.p[2] / (wide * 1.2))
+    g.fillStyle = col(sp.leaf, sp.flat ? [70, 125, 110] : [120, 185, 80], f.k * z); g.globalAlpha = .85
+    g.beginPath(); g.ellipse(X(f.p), Y(f.p), f.s * k * (sp.flat ? .42 : .2), f.s * k * (sp.flat ? .09 : .15), sp.flat ? (f.p[0] > 0 ? .25 : -.25) : f.k * 9, 0, 7); g.fill() }
+  g.globalAlpha = 1
+  g.fillStyle = '#f3e9c6'; g.fillRect(22, HH - 26 - 1.7 * k, 2, 1.7 * k); g.font = '11px ui-monospace, Menlo, monospace'; g.fillText('you, 1.7 m', 30, HH - 30)
+  const b = SP[kind]
+  $('treenote').textContent = `${kind}: ${t.H.toFixed(1)} m tall, ${t.limbs.length} limbs, ${t.leaves.length} leaf cards. Its whole definition: height ${b.h}, children per level [${b.n}], pitch [${b.pitch}], spread ${b.spread}, lift [${b.lift}], wander ${b.wander}, crown from ${b.crown}.`
+}
+$('species').innerHTML = Object.keys(SP).map(k => `<button data-k="${k}" aria-pressed="${k == kind}">${k.toUpperCase()}</button>`).join('') + '<button id="regrow">↻ ANOTHER</button>'
+
+// ---- 8. the clock: the same formulas as light() in src/look.js
+function drawDay() {
+  const W = 360, H = 150, g = pen($('day'), W, H)
+  for (let x = 0; x < W; x++) {
+    const hour = x / W * 24, e = .72 * Math.sin((hour - 6) / 12 * Math.PI), day = sat(e * 4 + .35), high = sat(e * 2.5)
+    const c = [lerp(.055, .82 - .2 * high, day), lerp(.08, .58 + .1 * high, day), lerp(.13, .4 + .2 * high, day)].map(v => Math.sqrt(v) * 255 | 0)
+    g.fillStyle = `rgb(${c})`; g.fillRect(x, 0, 1, H - 22)
+    g.fillStyle = `rgba(215,225,215,${(2 - 1.2 * high) / 2.4})`; g.fillRect(x, H - 16, 1, 10)
+  }
+  const mid = (H - 22) / 2, curve = (sign, colour) => { g.strokeStyle = colour; g.lineWidth = 2; g.beginPath()
+    for (let x = 0; x <= W; x++) { const e = sign * .72 * Math.sin((x / W * 24 - 6) / 12 * Math.PI); if (e >= 0) g.lineTo(x, mid + 34 - e * 110); else g.moveTo(x + 1, mid + 34) }
+    g.stroke() }
+  g.strokeStyle = '#0005'; g.lineWidth = 1; g.beginPath(); g.moveTo(0, mid + 34); g.lineTo(W, mid + 34); g.stroke()
+  curve(1, '#ffd27a'); curve(-1, '#dfe8ff')
+  g.fillStyle = '#fff9'; g.font = '10px ui-monospace, Menlo, monospace'
+  for (const h of [0, 6, 12, 18]) g.fillText(String(h).padStart(2, '0') + ':00', h / 24 * W + 3, 12)
+  g.fillStyle = '#8d9783'; g.fillText('mist', 3, H - 20 + 2)
+}
+
+// ---- wiring
+const all = () => { drawNoise(); drawMap(); drawScatter(); drawTree() }
+$('seed').oninput = e => { SEED = +e.target.value | 0; all() }
+$('reseed').onclick = () => { $('seed').value = SEED = Math.random() * 1e5 | 0; all() }
+$('mapmode').onclick = e => { if (!e.target.dataset.m) return; mode = e.target.dataset.m; for (const b of $('mapmode').children) b.setAttribute('aria-pressed', b == e.target); drawMap() }
+$('walk').oninput = drawScatter
+$('species').onclick = e => { if (e.target.id == 'regrow') treeSeed++; else if (e.target.dataset.k) { kind = e.target.dataset.k; for (const b of $('species').children) b.setAttribute('aria-pressed', b == e.target) } else return; drawTree() }
+all(); drawDay()
+</script>
+</html>
