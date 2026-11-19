@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { Sky } from 'three/addons/objects/Sky.js'
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
+import { FullScreenQuad } from 'three/addons/postprocessing/Pass.js'
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
 
@@ -24,13 +25,16 @@ THREE.ShaderChunk.project_vertex = THREE.ShaderChunk.project_vertex.replace('mvP
 // ---------------------------------------------------------------- surfaces
 // organic(): one patch gives a material wind, wingbeats, soft two-sided shading and light through the leaf.
 function organic(m, { sway = '0.', flap = 0, glow = 0 }) {
+  m.customProgramCacheKey = () => sway + flap + glow // the patch text is the same for all three, so without this they share the first one's program
   m.onBeforeCompile = s => {
     Object.assign(s.uniforms, { uTime, uSunView, uSunCol: { value: SUN_COLOR } })
     s.vertexShader = 'uniform float uTime;\n' + s.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
       vec3 wp = (instanceMatrix * vec4(position, 1.)).xyz; float sc = length(instanceMatrix[0].xyz);
       float gust = .6 + .4 * sin(uTime * .4 + wp.x * .05 + wp.z * .07);
       transformed.xz += (${sway}) * gust * (sin(uTime * 1.3 + wp.x * .3 + wp.z * .2) * .07 + sin(uTime * 3.7 + wp.x * 2.1 + wp.y * 1.7) * .025) / sc;
-      transformed.y += ${flap ? 'abs(position.x) * sin(uTime * (5. + 1.2 / sc) + instanceColor.r * 60.) * .8' : '0.'};`)
+      #ifdef USE_INSTANCING_COLOR // absent until a layer has scattered its first instance
+      transformed.y += ${flap ? 'abs(position.x) * sin(uTime * uv.y + instanceColor.r * 60.) * uv.x' : '0.'}; // a flyer's uv holds its beat: swing, rate
+      #endif`)
     s.fragmentShader = 'uniform vec3 uSunView, uSunCol;\n' + s.fragmentShader
       .replace('#include <normal_fragment_begin>', THREE.ShaderChunk.normal_fragment_begin.replace('gl_FrontFacing ? 1.0 : - 1.0', '1.0'))
       .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
@@ -88,9 +92,9 @@ export function light(scene, renderer) {
   return Object.assign((hour, rain, x, y, z) => {
     const a = (hour - 6) / 12 * Math.PI
     S.set(Math.cos(a), .72 * Math.sin(a), .7 * Math.sin(a))                    // sunrise at six, 46 degrees up at noon
-    const e = S.y, day = sat(e * 4 + .35), high = sat(e * 2.5)
+    const e = S.y, day = sat(e * 5 + .9), high = sat(e * 2.5)                      // full day until the sun touches the horizon, then about an hour of dusk
     SUN.copy(S).multiplyScalar(e > 0 ? 1 : -1)                                 // the moon rides opposite the sun
-    U.time.value = uTime.value * 40; U.cloudCoverage.value = .35 + .6 * rain                  // clouds drift, and close over for a shower
+    U.time.value = uTime.value * 40; U.showSunDisc.value = sat(1 + e * 40); U.cloudCoverage.value = .35 + .6 * rain                  // clouds drift, and close over for a shower
     uWet.value = rain; uMist.value = 2 - 1.2 * high + 2 * rain                 // mist gathers at dawn, dusk, night and in rain
     if (e > 0) SUN_COLOR.setRGB(1, .4 + .42 * high, .15 + .45 * high).multiplyScalar(sat(e * 6) * (1 - .85 * rain))
     else SUN_COLOR.setRGB(.5, .65, 1).multiplyScalar(.3 * sat(-e * 6))
@@ -127,14 +131,15 @@ export function motes(scene) {
 }
 
 // ---------------------------------------------------------------- air and lens
-// Air marches each view ray through the sun's shadow map: lit fog becomes shafts, and a drifting
-// noise layer pools as mist near the ground. Lens adds what a camera adds.
-const Air = {
-  uniforms: { tScene: { value: null }, tDepth: { value: null }, tShadow: { value: null }, uInvProj: { value: new THREE.Matrix4() }, uCamWorld: { value: new THREE.Matrix4() },
+// Fog marches each view ray through the sun's shadow map: lit fog becomes shafts, and a drifting
+// noise layer pools as mist near the ground. It is soft, so it is marched at half size (a quarter of the rays)
+// and Air lays it over the scene. Lens adds what a camera adds.
+const Fog = {
+  uniforms: { tDepth: { value: null }, tShadow: { value: null }, uInvProj: { value: new THREE.Matrix4() }, uCamWorld: { value: new THREE.Matrix4() },
     uShadow: { value: new THREE.Matrix4() }, uCam: { value: new THREE.Vector3() }, uSun: { value: SUN }, uSunCol: { value: SUN_COLOR }, uFog: { value: FOG }, uTime, uGround: { value: 0 }, uOpen: { value: 0 } },
   vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0., 1.); }',
   fragmentShader: `
-    uniform sampler2D tScene, tDepth; uniform sampler2DShadow tShadow; uniform mat4 uInvProj, uCamWorld, uShadow;
+    uniform sampler2D tDepth; uniform sampler2DShadow tShadow; uniform mat4 uInvProj, uCamWorld, uShadow;
     uniform vec3 uCam, uSun, uSunCol, uFog; uniform float uTime, uGround, uOpen, uMist, uWet; varying vec2 vUv;
     float h3(vec3 p) { p = fract(p * .3183099 + .1) * 17.; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
     float n3(vec3 x) { vec3 i = floor(x), f = fract(x); f = f * f * (3. - 2. * f); vec2 e = vec2(0., 1.);
@@ -158,7 +163,25 @@ const Air = {
         L += T * a * (uSunCol * lit * phase * 1.6 + uFog); // lit by the sun where it reaches, by the sky everywhere
         T *= 1. - a; s0 = s1;
       }
-      gl_FragColor = vec4(min(texture2D(tScene, vUv).rgb, 8.) * T + L, 1.); // the sun's disc is thousands bright: unclamped, bloom flashes the frame
+      gl_FragColor = vec4(L, T); // light the air adds, and how much of the scene still shows through it
+    }`,
+}
+
+const Air = {
+  uniforms: { tScene: { value: null }, tDepth: { value: null }, tFog: { value: null }, uTexel: { value: new THREE.Vector2() } },
+  vertexShader: Fog.vertexShader,
+  fragmentShader: `uniform sampler2D tScene, tDepth, tFog; uniform vec2 uTexel; varying vec2 vUv;
+    float far(float d) { return 1. / (1.0001 - d); }
+    void main() { // of the four fog texels around this pixel, lean on those at its own depth, so mist does not bleed across a trunk's edge
+      float z = far(texture2D(tDepth, vUv).x), sum = 0.; vec4 fog = vec4(0.);
+      vec2 p = vUv / uTexel - .5, f = fract(p), base = (floor(p) + .5) * uTexel;
+      for (int i = 0; i < 4; i++) {
+        vec2 o = vec2(float(i & 1), float(i >> 1)), uv = base + o * uTexel, b = mix(1. - f, f, o);
+        float w = (b.x * b.y + .01) / (.02 * z + abs(z - far(texture2D(tDepth, uv).x)));
+        fog += texture2D(tFog, uv) * w; sum += w;
+      }
+      fog /= sum;
+      gl_FragColor = vec4(min(texture2D(tScene, vUv).rgb, 8.) * fog.a + fog.rgb, 1.); // the sun's disc is thousands bright: unclamped, bloom flashes the frame
     }`,
 }
 
@@ -178,26 +201,36 @@ const Lens = {
 }
 
 export function post(renderer, scene, camera, sun) {
-  const size = renderer.getDrawingBufferSize(new THREE.Vector2())
+  const size = renderer.getDrawingBufferSize(new THREE.Vector2()), half = () => [Math.ceil(size.x / 2), Math.ceil(size.y / 2)]
   const rt = new THREE.WebGLRenderTarget(size.x, size.y, { type: THREE.HalfFloatType, samples: 4, depthTexture: new THREE.DepthTexture(size.x, size.y) })
-  const composer = new EffectComposer(renderer), air = new ShaderPass(Air), u = air.uniforms
+  const mist = new THREE.WebGLRenderTarget(...half(), { type: THREE.HalfFloatType, depthBuffer: false, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter })
+  const fog = new FullScreenQuad(new THREE.ShaderMaterial(Fog)), u = fog.material.uniforms
+  const composer = new EffectComposer(renderer), air = new ShaderPass(Air), a = air.uniforms
+  const bloom = new UnrealBloomPass(size, .3, .7, 1.1), sized = bloom.setSize.bind(bloom)
+  bloom.setSize = (w, h) => sized(w / 2, h / 2) // a glow has no detail to lose
   composer.addPass(air)
-  composer.addPass(new UnrealBloomPass(size, .3, .7, 1.1))
+  composer.addPass(bloom)
   composer.addPass(new OutputPass())
   const lens = new ShaderPass(Lens)
   composer.addPass(lens)
-  u.tScene.value = rt.texture; u.tDepth.value = rt.depthTexture
-  Object.assign(u, { uTime, uMist, uWet, uSun: { value: SUN }, uSunCol: { value: SUN_COLOR }, uFog: { value: FOG } }) // a pass copies its uniforms: share the live ones
+  a.tScene.value = rt.texture; a.tDepth.value = u.tDepth.value = rt.depthTexture; a.tFog.value = mist.texture
+  Object.assign(u, { uTime, uMist, uWet, uSun: { value: SUN }, uSunCol: { value: SUN_COLOR }, uFog: { value: FOG } }) // a material copies its uniforms: share the live ones
   Object.assign(lens.uniforms, { uTime, uDay })
+  renderer.shadowMap.autoUpdate = false
+  let frame = 0
+  const fit = (w, h) => { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); renderer.getDrawingBufferSize(size); rt.setSize(size.x, size.y); mist.setSize(...half()); a.uTexel.value.set(1 / mist.width, 1 / mist.height) }
+  fit(innerWidth, innerHeight)
   return {
-    resize(w, h) { composer.setPixelRatio(renderer.getPixelRatio()); composer.setSize(w, h); renderer.getDrawingBufferSize(size); rt.setSize(size.x, size.y) },
+    resize: fit,
     render(t, ground, open) { // open: how much of a clearing we stand in; sun burns the mist off there
       uTime.value = t
       uSunView.value.copy(SUN).transformDirection(camera.matrixWorldInverse)
-      renderer.setRenderTarget(rt); renderer.render(scene, camera); renderer.setRenderTarget(null)
+      renderer.shadowMap.needsUpdate = frame++ % 2 == 0 // shadows move slowly: draw their map every other frame
+      renderer.setRenderTarget(rt); renderer.render(scene, camera)
       u.tShadow.value = sun.shadow.map.depthTexture; u.uShadow.value.copy(sun.shadow.matrix)
       u.uInvProj.value.copy(camera.projectionMatrixInverse); u.uCamWorld.value.copy(camera.matrixWorld)
       u.uCam.value.copy(camera.position); u.uGround.value = ground; u.uOpen.value = open
+      renderer.setRenderTarget(mist); fog.render(renderer); renderer.setRenderTarget(null)
       composer.render()
     },
   }

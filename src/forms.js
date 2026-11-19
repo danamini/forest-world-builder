@@ -200,9 +200,12 @@ export function mushroom(P, rnd) {
 export const litter = (P, rnd) => form({ leaf: [card(P.card, new THREE.Matrix4().makeRotationX(-1.5).scale(V(.35, .35, .35)).setPosition(0, .03, 0), rnd() * 2 | 0 ? 0 : 3, [1.3 + rnd() * .5, .7, .25], .2, .2)] })
 
 // ---------------------------------------------------------------- fauna
-// Two wings and a body, unit span. The wing material flaps it; chord, taper and scale decide butterfly, dragonfly or moth.
-export function flyer(P, rnd, chord, tint, taper) {
+// Two wings and a body, unit span. chord and taper shape the wing, body = [girth, half length, how far it trails], beat = [swing, rate]:
+// together they decide butterfly, dragonfly or moth. The beat rides in uv, where the wing material reads it.
+export function flyer(P, rnd, chord, tint, taper, body = [.05, .3, 0], beat = [.8, 19]) {
   const w = P.card.clone(), Q = w.attributes.position, N = w.attributes.normal
   each(Q, i => { const x = Q.getX(i); Q.setXYZ(i, x, 0, (Q.getY(i) - .5) * chord * (1 - Math.abs(x) * taper)); N.setXYZ(i, 0, 1, 0) })
-  return form({ wing: [paint(w, p => tint.map(c => c * (.4 + 1.2 * Math.abs(p.x)))), lump(P.blob, rnd, [chord * .18, chord * .18, chord * .75], 0, tint.map(c => c * .6), 0)] })
+  const g = mergeGeometries([paint(w, p => tint.map(c => c * (.2 + .9 * Math.abs(p.x)))), lump(P.blob, rnd, [body[0], body[0], body[1]], 0, tint.map(c => c * .3), 0).translate(0, 0, -body[2])])
+  each(g.attributes.uv, i => g.attributes.uv.setXY(i, ...beat))
+  return form({ wing: [g] })
 }

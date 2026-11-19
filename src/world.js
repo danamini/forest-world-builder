@@ -17,9 +17,10 @@ const many = (n, f) => Array.from({ length: n }, f)
 const pick = (r, n, first = 0) => first + (r() * n | 0)
 const fly = (R, H, v, flutter = 0) => (d, o, t) => { // wander a looping orbit around home, nose along the path of travel, bobbing as it goes
   const at = k => { const a = (t + k) * v / R * (o.h > .5 ? 1 : -1) + o.h * 99
-    return d.position.set(o.x + Math.cos(a) * R * (.5 + o.h), o.y + H * (.6 + .4 * o.h) + Math.sin(a * 2.3 + o.h * 9) * H * .1 + Math.sin((t + k) * 8 + o.h * 70) * flutter, o.z + Math.sin(a * 1.3) * R) }
+    return d.position.set(o.x + Math.cos(a) * R * (.5 + o.h), o.y + H * (.6 + .4 * o.h) + Math.sin(a * 2.3 + o.h * 9) * H * .1, o.z + Math.sin(a * 1.3) * R) }
   const next = at(.2).clone()
   at(0); d.lookAt(next)
+  d.position.y += Math.sin(t * 8 + o.h * 70) * flutter // the flutter lifts the body without nodding it
 }
 
 export function populate(scene, P, mats, rnd) {
@@ -46,9 +47,9 @@ export function populate(scene, P, mats, rnd) {
     { cell: 1.1, radius: 24, shadow: false, tilt: .3, forms: many(3, () => F.litter(P, rnd)), rule: (e, r) => r() < .5 * (1 - e.glade) && [pick(r, 3), .5 + r()] },
     { cell: 6, radius: 36, shadow: false, forms: [[.65, .22, .05], [.6, .6, .5], [.14, .28, .7], [.7, .6, .1], [.25, .15, .07]].map(c => F.flyer(P, rnd, .5, c, -1.2)), move: fly(1.8, 1.3, .9, .1), sleeps: 1, // butterflies
       rule: (e, r) => r() < .12 + .6 * e.glade && [pick(r, 5), .06 + r() * .05] },
-    { cell: 7, radius: 40, shadow: false, forms: [[.1, .35, .6], [.15, .5, .3], [.6, .15, .1]].map(c => F.flyer(P, rnd, .14, c, .5)), move: fly(5, 1.4, 4), sleeps: 1, // dragonflies hawk over damp ground
+    { cell: 7, radius: 40, shadow: false, forms: [[.1, .35, .6], [.15, .5, .3], [.6, .15, .1]].map(c => F.flyer(P, rnd, .16, c, .5, [.03, .4, .22], [.22, 55])), move: fly(5, 1.4, 4), sleeps: 1, // dragonflies hawk over damp ground
       rule: (e, r) => r() < sat(e.wet * 5 - 2.1) && [pick(r, 3), .09 + r() * .04] },
-    { cell: 5, radius: 30, shadow: false, forms: [[.5, .48, .4], [.3, .26, .2]].map(c => F.flyer(P, rnd, .6, c, .3)), move: fly(1.2, 1.8, .7, .15), sleeps: -1, // moths come out when the butterflies go in
+    { cell: 5, radius: 30, shadow: false, forms: [[.5, .48, .4], [.3, .26, .2]].map(c => F.flyer(P, rnd, .6, c, .3, [.07, .26, 0], [.7, 26])), move: fly(1.2, 1.8, .7, .15), sleeps: -1, // moths come out when the butterflies go in
       rule: (e, r) => r() < .5 && [pick(r, 2), .04 + r() * .03] },
     { cell: 5, radius: 30, shadow: false, forms: [F.litter(P, rnd)], rule: (e, r) => r() < .5 * (1 - e.glade) && [0, .4 + r() * .4],
       move: (d, o, t) => { const k = (t * .7 + o.h * 40) % 14

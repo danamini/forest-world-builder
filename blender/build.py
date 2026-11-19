@@ -177,7 +177,7 @@ def shoot(transform, override=None):
     return px.reshape(N, N, 4)
 
 
-def save(name, px, quality=80):  # WebP: a fifth the weight of PNG and JPEG at the same look
+def save(name, px, quality=80):  # WebP: a fifth the weight of PNG and JPEG at the same look. Colour maps take 65; normals keep 80, where blocking would show as false relief
     h, w, ch = px.shape
     if ch == 3:
         px = np.dstack([px, np.ones((h, w))])
@@ -198,7 +198,7 @@ for _ in range(24):  # bleed leaf colour outward so mipmaps never pull in a dark
     rgb = np.where(grow, nb / np.maximum(nm, 1), rgb)
     m = np.where(grow, 1, m)
 rgb = np.where(m > 0, rgb, rgb.sum((0, 1)) / m.sum())
-save('sprigs_c', np.dstack([rgb, a]), 85)
+save('sprigs_c', np.dstack([rgb, a]), 70)
 save('sprigs_n', np.where(n[..., 3:] > .5, n[..., :3], (.5, .5, 1)))
 
 
@@ -234,14 +234,14 @@ plate = step(np.abs(fnoise(1, 1.1, 1, 6, lo=5) * 2 - 1), .02, .3) ** .7
 h = plate * .8 + fnoise(2, 1.2, 1, 3, lo=20) * .35
 c = mix((.16, .13, .11), (.70, .65, .60), step(h, .1, .95)) * (.8 + .4 * fnoise(3, 1.6)[..., None])
 c = mix(c, (.62, .70, .52), step(fnoise(4, 2.2), .7, .8) * .35)
-save('bark_c', c)
+save('bark_c', c, 65)
 save('bark_n', half(normal(h, 9)))
 
 # rock: weathered mass with thin cracks
 crack = step(np.abs(fnoise(5, 1.7) * 2 - 1), 0, .035)
 h = fnoise(6, 2) * .7 + fnoise(7, 1.1, lo=30) * .25 + crack * .3
 c = mix((.34, .33, .31), (.80, .78, .74), step(h, .25, 1.05)) * (.55 + .45 * crack[..., None])
-save('rock_c', c)
+save('rock_c', c, 65)
 save('rock_n', half(normal(h, 7)))
 
 # ground: a real litter bed. Leaves, needles and twigs strewn over soil with the sprig tools,
@@ -271,7 +271,7 @@ strew(70, lambda M: leaf(M, random.uniform(.08, .3), random.uniform(.003, .007),
 add('litter', bm).data.materials.append(mat)
 cam.location, cam.data.ortho_scale = (10.5, .5, 5), 1
 scene.render.resolution_x = scene.render.resolution_y = N = 1024
-save('ground_c', shoot('Standard')[..., :3])
+save('ground_c', shoot('Standard')[..., :3], 65)
 save('ground_n', shoot('Raw', nmat)[..., :3])
 os.remove(os.path.join(OUT, '_shot.png'))
 print('assets written to', os.path.abspath(OUT))
