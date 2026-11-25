@@ -102,7 +102,7 @@
     <figcaption>90 m across. Each dot is a tree, sized by its trunk; empty squares answered no. Drag the slider: you move, the trees do not.</figcaption>
   </figure>
 
-  <h2><small>4 · LAYERS</small>Fourteen rules, one mechanism</h2>
+  <h2><small>4 · LAYERS</small>What grows, walks and flies in each layer</h2>
   <p>Trees are one layer. Every other living thing is another layer on the same mechanism, differing only in the size of its squares, how far out it is drawn, and its rule.</p>
   <div class="wide"><table>
     <tr><th>LAYER</th><th>SQUARE</th><th>REACH</th><th>RULE, IN WORDS</th></tr>
@@ -120,7 +120,17 @@
     <tr><td>Dragonflies</td><td class="n">7 m</td><td class="n">40 m</td><td>Hawk over damp ground; gone at night</td></tr>
     <tr><td>Moths</td><td class="n">5 m</td><td class="n">30 m</td><td>Everywhere, but only after dark</td></tr>
     <tr><td>Falling leaves</td><td class="n">5 m</td><td class="n">30 m</td><td>Under trees, forever falling</td></tr>
+    <tr><td>Saplings, whortleberry and stumps</td><td class="n">3.4 m</td><td class="n">75 m</td><td>Saplings cluster along clearing edges. Whortleberry favours dry woodland.</td></tr>
+    <tr><td>Tall grass and rushes</td><td class="n">1.5 m</td><td class="n">34 m</td><td>Grass grows in swathes across meadows. Rushes mark wet ground.</td></tr>
+    <tr><td>Tall flowers</td><td class="n">2.1 m</td><td class="n">42 m</td><td>Foxglove, willowherb and cow parsley grow in patches along clearing edges and in canopy gaps.</td></tr>
+    <tr><td>Small birds</td><td class="n">16 m</td><td class="n">110 m</td><td>Flap and glide between trunks by day.</td></tr>
+    <tr><td>Crows and pigeons</td><td class="n">30 m</td><td class="n">170 m</td><td>Fly above the canopy.</td></tr>
+    <tr><td>Buzzards</td><td class="n">110 m</td><td class="n">330 m</td><td>Circle high above the wood.</td></tr>
+    <tr><td>Deer</td><td class="n">45 m</td><td class="n">125 m</td><td>Herds favour clearings away from the path.</td></tr>
+    <tr><td>Rabbits</td><td class="n">10 m</td><td class="n">55 m</td><td>Family groups feed in the grass.</td></tr>
+    <tr><td>Foxes</td><td class="n">75 m</td><td class="n">120 m</td><td>Roam the wood alone.</td></tr>
   </table></div>
+  <p>A deer, a rabbit and a fox share one body plan. Leg length, ear shape and the bend of the neck give each its silhouette. As you approach, a grazing animal lifts its head to watch you, then bolts. It steers around trunks and fallen logs. When the wood is redrawn around you, the animal keeps its position and stride.</p>
   <figure>
     <svg viewBox="0 0 720 230" role="img" aria-label="Reach and refill around the walker">
       <circle cx="200" cy="115" r="100" fill="#1b2a1a" stroke="#4d6148"/><circle cx="200" cy="115" r="80" fill="#24402a" stroke="none"/>
@@ -179,6 +189,8 @@
 
   <h2><small>8 · LIGHT</small>Sun, air and lens</h2>
   <p>A clock drives everything about light. The sun rises at six and sets at eighteen; the moon rides exactly opposite it. From the sun's height the clock sets the light's colour and strength, the sky, the mist and the exposure. Showers drift through on their own slow noise, closing the cloud and dimming the sun.</p>
+  <p>The forest day takes six minutes. Press T or tap the clock to follow your local time. Clouds drift in either mode. In a shower, nearby drops make long, soft streaks, distant ones form a veil, and the wet ground briefly flashes where drops land. <a href="./?rain=1&amp;hour=14">Walk in afternoon rain</a>.</p>
+  <p>On a <a href="./?seed=3&amp;hour=23">night walk</a>, watch a deer as it turns towards you. Each eye catches the light at its centre and fades towards the rim. At a distance the shader scales the glint with its size on screen, capped by the width of the head so the two eyes stay distinct.</p>
   <figure>
     <canvas id="day" width="360" height="150"></canvas>
     <figcaption>One day, midnight to midnight. The band is the colour of the air; the curves are the height of the sun (warm) and moon (pale); the bottom strip is how much mist gathers.</figcaption>
@@ -199,7 +211,7 @@
   </figure>
   <p>Wind, wingbeats and the glow of sun through a leaf are small additions to the surface shaders, shared by every plant.</p>
 
-  <footer>The wood is about 700 lines of JavaScript on top of three.js, plus one Blender script. The page it loads is about 2.0 MB. This document carries its own copy of the noise, field, scatter and growth rules, so it stands alone.</footer>
+  <footer>The wood is about 980 lines of JavaScript on top of three.js, plus one Blender script. The page it loads is about 2.0 MB. This document carries its own copy of the noise, field, scatter and growth rules, so it stands alone.</footer>
 </main>
 
 <script>
@@ -212,7 +224,7 @@ const fbm = (x, z, o = 4, k = 0) => { let s = 0, a = .5, n = 0; for (let i = 0; 
 const sat = x => Math.min(1, Math.max(0, x)), lerp = (a, b, t) => a + (b - a) * t
 const mulberry = s => () => { s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 }
 const trail = z => 45 * (noise(z * .011, 3.3, 5) - .5) + 12 * (noise(z * .035, 8.1, 6) - .5)
-const fields = (x, z) => ({ path: Math.abs(x - trail(z)), glade: sat((fbm(x * .012, z * .012, 3, 1) - .54) * 9), wet: fbm(x * .008, z * .008, 3, 2), gap: sat(noise(x * .045, z * .045, 7) * 4 - 1.3) })
+const fields = (x, z) => ({ path: Math.abs(x - trail(z)), glade: Math.max(sat((fbm(x * .007, z * .007, 3, 1) - .55) * 14), sat((noise(x * .028, z * .028, 21) - .74) * 9)), wet: fbm(x * .008, z * .008, 3, 2), gap: sat(noise(x * .045, z * .045, 7) * 4 - 1.3) })
 const height = (x, z) => 16 * fbm(x * .006, z * .006, 4, 3) + 1.5 * fbm(x * .04, z * .04, 2, 4) - .2 * Math.exp(-(((x - trail(z)) / 3) ** 2))
 
 const $ = id => document.getElementById(id)
